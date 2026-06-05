@@ -1,0 +1,83 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace LAB
+{
+    public class IComparable<Book>
+    {
+        public Book GiaTri { get; set; } = default;
+
+        private int _YearPublished;
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public string ISBN { get; set; }
+
+        //Vadilation cau hoi q1
+        public int YearPublished
+        {
+            get => _YearPublished;
+            set
+            {
+                int currentYear = DateTime.Now.Year;
+                if (value >= 1000 && value < currentYear) {
+                    YearPublished = value;
+                }
+                else
+                {
+                    Console.WriteLine($"Nam phai tu 1000 den nam hien tai");
+                }
+            }
+
+            public Book(string title, string author, string isbn, int year)
+        {
+            Title = title;
+            Author = author;
+            ISBN = isbn;
+            YearPublished = year;
+
+        }
+        // cau hoi q2
+        public Book() : this("Unknow", "Unknow", "000", 1000) { }
+        public Book(string title, string author) : this(title, author, "000", 2000) { }
+
+
+        //cau hoi 3
+        public override bool Equals(object obj) => obj is Book b && this.ISBN == b.ISBN;
+        public override int GetHashCode() => ISBN?.GetHashCode() ?? 0;
+
+        // Cau hoi A1
+        public int CompareTo(Book other)
+        {
+            return this.YearPublished.CompareTo(other?.YearPublished);
+        }
+
+        public override string ToString() => $"{Title} - {Author} ({YearPublished})[{ISBN}]";
+    }
+
+    public class QLTV
+    {
+        // Cau hoi A2
+        public static List<Book> GetBooksAfterYears(List<Book> book, int year)
+        {
+            List<Book> result = new List<Book>();
+            foreach (var b in books) if (b.YearPublished > year) result.Add(b);
+            return result;
+        }
+        //Cau hoi A3
+        public static Dictionary<string , int> CountBooksByAuthor(List<Book> books)
+        {
+            var dict = new Dictionary<string , int>();
+            foreach (var b in books) if (dict.ContainsKey(b.Author)) dict[b.Author]++;
+            else dict[b.Author] = 1;
+
+            return dict;
+
+        }
+         
+
+    }

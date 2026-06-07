@@ -1,0 +1,188 @@
+using System;
+using System.Collections.Generic;
+
+namespace StudentManagementSystem
+{
+  
+    public class Student
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public double Grade { get; set; }
+
+        public Student(string id, string name, double grade)
+        {
+            Id = id;
+            Name = name;
+            Grade = grade;
+        }
+
+        public override string ToString()
+        {
+            return $"ID: {Id} | Tên: {Name} | Điểm: {Grade}";
+        }
+    }
+
+  
+    public class StudentManagement
+    {
+        // Khởi tạo Dictionary với Key = Name, Value = Student
+        private Dictionary<string, Student> studentDict = new Dictionary<string, Student>();
+
+        // Q1: Viết chính xác method AddStudentSafe() để thêm an toàn, tránh trùng Key
+        public bool AddStudentSafe(Student student)
+        {
+            if (student == null || string.IsNullOrEmpty(student.Name))
+                return false;
+
+            // Kiểm tra xem Key (Tên sinh viên) đã tồn tại trong Dictionary chưa
+            if (!studentDict.ContainsKey(student.Name))
+            {
+                studentDict.Add(student.Name, student);
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"[LỖI] Không thể thêm! Sinh viên có tên '{student.Name}' đã tồn tại.");
+                return false;
+            }
+        }
+
+        // Q2: Tìm sinh viên có điểm cao nhất (bắt buộc dùng vòng lặp)
+        public Student GetHighestGradeStudent()
+        {
+            if (studentDict.Count == 0) return null;
+
+            Student highestStudent = null;
+
+            // Duyệt qua từng cặp Key-Value trong Dictionary bằng vòng lặp foreach
+            foreach (KeyValuePair<string, Student> kvp in studentDict)
+            {
+                // kvp.Value chính là đối tượng Student
+                if (highestStudent == null || kvp.Value.Grade > highestStudent.Grade)
+                {
+                    highestStudent = kvp.Value;
+                }
+            }
+            return highestStudent;
+        }
+
+        // Q3: Chuyển đổi Dictionary sang List<Student>
+        public List<Student> ConvertToList()
+        {
+            List<Student> list = new List<Student>();
+            foreach (KeyValuePair<string, Student> kvp in studentDict)
+            {
+                list.Add(kvp.Value); // Lấy phần Value (Student) bỏ vào List
+            }
+            return list;
+        }
+
+        // Hàm hỗ trợ in toàn bộ danh sách trong Dictionary
+        public void PrintAll()
+        {
+            foreach (var kvp in studentDict)
+            {
+                Console.WriteLine(kvp.Value);
+            }
+        }
+    }
+
+    // A1: Tạo generic class Repository<TKey, TValue> với ràng buộc TValue phải là Student hoặc con của Student
+    public class Repository<TKey, TValue> where TValue : Student
+    {
+        private Dictionary<TKey, TValue> _data = new Dictionary<TKey, TValue>();
+
+        public void Add(TKey key, TValue value)
+        {
+            if (!_data.ContainsKey(key))
+            {
+                _data.Add(key, value);
+            }
+        }
+
+        // A2: Implement indexer truy cập Student theo Name (TKey đóng vai trò là Name)
+        public TValue this[TKey name]
+        {
+            get
+            {
+                if (_data.ContainsKey(name))
+                {
+                    return _data[name];
+                }
+                return null; // Trả về null nếu không tìm thấy tên này
+            }
+            set
+            {
+                _data[name] = value;
+            }
+        }
+
+        // A3: Viết method in sinh viên có Grade >= giá trị cho trước
+        public void PrintStudentsWithGradeGreaterThan(double minGrade)
+        {
+            Console.WriteLine($"\n--- Danh sách sinh viên có điểm >= {minGrade} ---");
+            foreach (var kvp in _data)
+            {
+                // Vì có ràng buộc 'where TValue : Student' nên ta gọi được thuộc tính .Grade thoải mái
+                if (kvp.Value.Grade >= minGrade)
+                {
+                    Console.WriteLine(kvp.Value);
+                }
+            }
+        }
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Cấu hình hiển thị tiếng Việt có dấu trên Console
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+            Console.WriteLine("====== TEST CÂU HỎI 01 (STUDENT MANAGEMENT) ======");
+            StudentManagement manager = new StudentManagement();
+
+            // Yêu cầu 3: Thêm thử 3 sinh viên
+            manager.AddStudentSafe(new Student("SV01", "Nguyễn Văn A", 8.5));
+            manager.AddStudentSafe(new Student("SV02", "Trần Thị B", 9.5));
+            manager.AddStudentSafe(new Student("SV03", "Lê Hoàng C", 7.2));
+
+            // Test hàm AddStudentSafe(): Thử cố tình thêm trùng tên xem có bị lỗi không
+            Console.WriteLine("\n[Thử nghiệm AddStudentSafe] Thêm sinh viên trùng tên 'Nguyễn Văn A':");
+            manager.AddStudentSafe(new Student("SV04", "Nguyễn Văn A", 6.0));
+
+            Console.WriteLine("\nDanh sách sinh viên hiện có trong Dictionary:");
+            manager.PrintAll();
+
+            // Test Q2: Tìm sinh viên điểm cao nhất
+            Student topStudent = manager.GetHighestGradeStudent();
+            Console.WriteLine($"\n-> Sinh viên có điểm cao nhất: {topStudent}");
+
+            // Test Q3: Chuyển Dictionary sang List và đếm số lượng
+            List<Student> listData = manager.ConvertToList();
+            Console.WriteLine($"-> Chuyển sang List<Student> thành công! Số phần tử trong List: {listData.Count}");
+
+
+            Console.WriteLine("\n====== TEST CÂU HỎI 02 (GENERIC REPOSITORY) ======");
+            Repository<string, Student> repo = new Repository<string, Student>();
+
+            // Thêm dữ liệu vào Repo (Key là Name)
+            repo.Add("Nguyễn Văn A", new Student("SV01", "Nguyễn Văn A", 8.5));
+            repo.Add("Trần Thị B", new Student("SV02", "Trần Thị B", 9.5));
+            repo.Add("Lê Hoàng C", new Student("SV03", "Lê Hoàng C", 7.2));
+
+            // Test A2: Sử dụng Indexer truy cập trực tiếp bằng Tên [ ]
+            Console.WriteLine("\n[Thử nghiệm Indexer] Tìm sinh viên có tên 'Trần Thị B':");
+            Student s = repo["Trần Thị B"];
+            if (s != null)
+            {
+                Console.WriteLine($"Kết quả tìm thấy từ Indexer -> {s}");
+            }
+
+            // Test A3: In sinh viên có điểm >= 8.0
+            repo.PrintStudentsWithGradeGreaterThan(8.0);
+
+            Console.ReadLine();
+        }
+    }
+}
